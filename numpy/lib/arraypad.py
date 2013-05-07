@@ -15,6 +15,223 @@ __all__ = ['pad']
 # Private utility functions.
 
 
+def _pad_const_before(arr, pad_amt, val, axis=-1):
+    """
+    Pad one axis with constant value before input `arr`.
+
+    Parameters
+    ----------
+    arr : ndarray
+        Input array of arbitrary shape.
+    pad_amt : int
+        Padding to apply along specified `axis`.
+    val : scalar
+        Constant value to use. For best results should be of type `arr.dtype`;
+        if not `arr.dtype` will be cast to `arr.dtype`.
+    axis : int
+        Axis along which to pad `arr`.
+
+    Returns
+    -------
+    zeropad_before : ndarray
+        Output array, same shape as `arr` except for `axis` which is now
+        `pad_amt` longer, padded before `arr` with `val`.
+
+    """
+    # Implicit booleanness to test for zero in any scalar type
+    if not pad_amt:
+        return arr
+    if axis < 0:
+        axis += arr.ndim
+    padshape = tuple([x if i != axis else pad_amt
+                      for (i, x) in enumerate(arr.shape)])
+    if not val:
+        return np.concatenate((np.zeros(padshape, dtype=arr.dtype), arr),
+                              axis=axis)
+    else:
+        return np.concatenate(((np.zeros(padshape) + val).astype(arr.dtype),
+                               arr), axis=axis)
+
+
+def _pad_const_after(arr, pad_amt, val, axis=-1):
+    """
+    Pad one `axis` with constant value after input `arr`.
+
+    Parameters
+    ----------
+    arr : ndarray
+        Input array of arbitrary shape.
+    pad_amt : int
+        Padding to apply along specified `axis`.
+    val : scalar
+        Constant value to use. For best results should be of type `arr.dtype`;
+        if not `arr.dtype` will be cast to `arr.dtype`.
+    axis : int
+        Axis along which to pad `arr`.
+
+    Returns
+    -------
+    zeropad_before : ndarray
+        Output array, same shape as `arr` except for `axis` which is now
+        `pad_amt` longer, padded after `arr` with `val`.
+
+    """
+    # Implicit booleanness to test for zero in any scalar type
+    if not pad_amt:
+        return arr
+    if axis < 0:
+        axis += arr.ndim
+    padshape = tuple([x if i != axis else pad_amt
+                      for (i, x) in enumerate(arr.shape)])
+    if not val:
+        return np.concatenate((arr, np.zeros(padshape, dtype=arr.dtype)),
+                              axis=axis)
+    else:
+        return np.concatenate((arr,
+                               (np.zeros(padshape) + val).astype(arr.dtype)),
+                              axis=axis)
+
+
+def _pad_edge_before(arr, pad_amt, axis=-1):
+    """
+    Private function to pad one axis with constant value before input `arr`.
+
+    Parameters
+    ----------
+    arr : ndarray
+        Input array of arbitrary shape.
+    pad_amt : int
+        Padding to apply along specified `axis`.
+    axis : int
+        Axis along which to pad `arr`.
+
+    Returns
+    -------
+    zeropad_before : ndarray
+        Output array, same shape as `arr` except for `axis` which is now
+        `pad_amt` longer, padded before `arr` by extending edge values.
+
+    """
+    # Implicit booleanness to test for zero in any scalar type
+    if not pad_amt:
+        return arr
+    if axis < 0:
+        axis += arr.ndim
+    rep_slice = tuple([slice(None) if i != axis else 0
+                       for (i, x) in enumerate(arr.shape)])
+    return np.concatenate((arr[rep_slice].repeat(pad_amt, axis=axis), arr),
+                          axis=axis)
+
+
+def _pad_edge_after(arr, pad_amt, axis=-1):
+    """
+    Private function to pad one `axis` with constant value after input `arr`.
+
+    Parameters
+    ----------
+    arr : ndarray
+        Input array of arbitrary shape.
+    pad_amt : int
+        Padding to apply along specified `axis`.
+    axis : int
+        Axis along which to pad `arr`.
+
+    Returns
+    -------
+    zeropad_before : ndarray
+        Output array, same shape as `arr` except for `axis` which is now
+        `pad_amt` longer, padded after `arr` by extending edge values.
+
+    """
+    # Implicit booleanness to test for zero in any scalar type
+    if not pad_amt:
+        return arr
+    if axis < 0:
+        axis += arr.ndim
+    rep_slice = tuple([slice(None) if i != axis else 0
+                       for (i, x) in enumerate(arr.shape)])
+    return np.concatenate((arr, arr[rep_slice].repeat(pad_amt, axis=axis)),
+                          axis=axis)
+
+
+def _pad_ramp_before(arr, pad_amt, end, axis=-1):
+    """
+    Pad one axis with linear ramp before input `arr`.
+
+    Parameters
+    ----------
+    arr : ndarray
+        Input array of arbitrary shape.
+    pad_amt : int
+        Padding to apply along specified `axis`.
+    end : scalar
+        Constal value to use. For best results should be of type `arr.dtype`;
+        if not `arr.dtype` will be cast to `arr.dtype`.
+    axis : int
+        Axis along which to pad `arr`.
+
+    Returns
+    -------
+    zeropad_before : ndarray
+        Output array, same shape as `arr` except for `axis` which is now
+        `pad_amt` longer, padded with a linear ramp from edge value to
+        `end`.
+
+    """
+    # Implicit booleanness to test for zero in any scalar type
+    if not pad_amt:
+        return arr
+    if axis < 0:
+        axis += arr.ndim
+    padshape = tuple([x if i != axis else pad_amt
+                      for (i, x) in enumerate(arr.shape)])
+    if not val:
+        return np.concatenate((np.zeros(padshape, dtype=arr.dtype), arr),
+                              axis=axis)
+    else:
+        return np.concatenate(((np.zeros(padshape) + val).astype(arr.dtype),
+                               arr), axis=axis)
+
+
+def _pad_ramp_after(arr, pad_amt, end, axis=-1):
+    """
+    Pad one `axis` with linear ramp after input `arr`.
+
+    Parameters
+    ----------
+    arr : ndarray
+        Input array of arbitrary shape.
+    pad_amt : int
+        Padding to apply along specified `axis`.
+    val : scalar
+        Constal value to use. For best results should be of type `arr.dtype`;
+        if not `arr.dtype` will be cast to `arr.dtype`.
+    axis : int
+        Axis along which to pad `arr`.
+
+    Returns
+    -------
+    zeropad_before : ndarray
+        Output array, same shape as `arr` except for `axis` which is now
+        `pad_amt` longer.
+
+    """
+    # Implicit booleanness to test for zero in any scalar type
+    if not pad_amt:
+        return arr
+    if axis < 0:
+        axis += arr.ndim
+    padshape = tuple([x if i != axis else pad_amt
+                      for (i, x) in enumerate(arr.shape)])
+    if not val:
+        return np.concatenate((arr, np.zeros(padshape, dtype=arr.dtype)),
+                              axis=axis)
+    else:
+        return np.concatenate((arr,
+                               (np.zeros(padshape) + val).astype(arr.dtype)),
+                              axis=axis)
+
+
 def _create_vector(vector, pad_tuple, before_val, after_val):
     """
     Private function which creates the padded vector.
@@ -765,27 +982,49 @@ def pad(array, pad_width, mode=None, **kwargs):
         raise ValueError('Keyword "mode" must be a function or one of %s.' %
                          (list(modefunc.keys()),))
     else:
+        # Still need to drop back to old, slower mode for user-supplied funcs
         # User supplied function, I hope
         function = mode
 
-    # Create a new padded array
-    rank = list(range(len(narray.shape)))
-    total_dim_increase = [np.sum(pad_width[i]) for i in rank]
-    offset_slices = [slice(pad_width[i][0],
-                           pad_width[i][0] + narray.shape[i])
-                     for i in rank]
-    new_shape = np.array(narray.shape) + total_dim_increase
-    newmat = np.zeros(new_shape).astype(narray.dtype)
+        # Create a new padded array
+        rank = list(range(len(narray.shape)))
+        total_dim_increase = [np.sum(pad_width[i]) for i in rank]
+        offset_slices = [slice(pad_width[i][0],
+                               pad_width[i][0] + narray.shape[i])
+                         for i in rank]
+        new_shape = np.array(narray.shape) + total_dim_increase
+        newmat = np.zeros(new_shape).astype(narray.dtype)
 
-    # Insert the original array into the padded array
-    newmat[offset_slices] = narray
+        # Insert the original array into the padded array
+        newmat[offset_slices] = narray
 
-    # This is the core of pad ...
-    for iaxis in rank:
-        np.apply_along_axis(function,
-                            iaxis,
-                            newmat,
-                            pad_width[iaxis],
-                            iaxis,
-                            kwargs)
+        # This is the core of pad ...
+        for iaxis in rank:
+            np.apply_along_axis(function,
+                                iaxis,
+                                newmat,
+                                pad_width[iaxis],
+                                iaxis,
+                                kwargs)
+        return newmat
+
+    # If we get here we use new vectorized padding method
+    newmat = array.copy()
+
+    # Vectorized padding along each axis
+    if 'constant' in mode:
+        for axis, ((pad_before, pad_after), (before_val, after_val)) \
+                in enumerate(zip(pad_width, kwargs['constant_values'])):
+            newmat = _pad_const_before(newmat, pad_before, before_val, axis)
+            newmat = _pad_const_after(newmat, pad_after, after_val, axis)
+    elif 'edge' in mode:
+        for axis, (pad_before, pad_after) in enumerate(pad_width):
+            newmat = _pad_edge_before(newmat, pad_before, axis)
+            newmat = _pad_edge_after(newmat, pad_after, axis)
+    elif 'linear_ramp' in mode:
+        for axis, ((pad_before, pad_after), (before_val, after_val)) \
+                in enumerate(zip(pad_width, kwargs['end_values'])):
+            newmat = _pad_const_before(newmat, pad_before, before_val, axis)
+            newmat = _pad_const_after(newmat, pad_after, after_val, axis)
+
     return newmat
