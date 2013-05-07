@@ -183,14 +183,12 @@ def _pad_ramp_before(arr, pad_amt, end, axis=-1):
         return arr
     if axis < 0:
         axis += arr.ndim
+    rep_slice = tuple([slice(None) if i != axis else 0
+                       for (i, x) in enumerate(arr.shape)])
     padshape = tuple([x if i != axis else pad_amt
                       for (i, x) in enumerate(arr.shape)])
-    if not val:
-        return np.concatenate((np.zeros(padshape, dtype=arr.dtype), arr),
+    return np.concatenate((np.zeros(padshape, dtype=arr.dtype), arr),
                               axis=axis)
-    else:
-        return np.concatenate(((np.zeros(padshape) + val).astype(arr.dtype),
-                               arr), axis=axis)
 
 
 def _pad_ramp_after(arr, pad_amt, end, axis=-1):
@@ -223,13 +221,8 @@ def _pad_ramp_after(arr, pad_amt, end, axis=-1):
         axis += arr.ndim
     padshape = tuple([x if i != axis else pad_amt
                       for (i, x) in enumerate(arr.shape)])
-    if not val:
-        return np.concatenate((arr, np.zeros(padshape, dtype=arr.dtype)),
-                              axis=axis)
-    else:
-        return np.concatenate((arr,
-                               (np.zeros(padshape) + val).astype(arr.dtype)),
-                              axis=axis)
+    return np.concatenate((arr, np.zeros(padshape, dtype=arr.dtype)),
+                          axis=axis)
 
 
 def _create_vector(vector, pad_tuple, before_val, after_val):
@@ -929,35 +922,38 @@ def pad(array, pad_width, mode=None, **kwargs):
     narray = np.array(array)
     pad_width = _validate_lengths(narray, pad_width)
 
-    modefunc = {'constant': _constant,
-                'edge': _edge,
-                'linear_ramp': _linear_ramp,
-                'maximum': _maximum,
-                'mean': _mean,
-                'median': _median,
-                'minimum': _minimum,
-                'reflect': _reflect,
-                'symmetric': _symmetric,
-                'wrap': _wrap,
-                }
+    modefunc = {
+            'constant': _constant,
+            'edge': _edge,
+            'linear_ramp': _linear_ramp,
+            'maximum': _maximum,
+            'mean': _mean,
+            'median': _median,
+            'minimum': _minimum,
+            'reflect': _reflect,
+            'symmetric': _symmetric,
+            'wrap': _wrap,
+            }
 
-    allowedkwargs = {'constant': ['constant_values'],
-                     'edge': [],
-                     'linear_ramp': ['end_values'],
-                     'maximum': ['stat_length'],
-                     'mean': ['stat_length'],
-                     'median': ['stat_length'],
-                     'minimum': ['stat_length'],
-                     'reflect': ['reflect_type'],
-                     'symmetric': ['reflect_type'],
-                     'wrap': [],
-                     }
+    allowedkwargs = {
+            'constant': ['constant_values'],
+            'edge': [],
+            'linear_ramp': ['end_values'],
+            'maximum': ['stat_length'],
+            'mean': ['stat_length'],
+            'median': ['stat_length'],
+            'minimum': ['stat_length'],
+            'reflect': ['reflect_type'],
+            'symmetric': ['reflect_type'],
+            'wrap': [],
+            }
 
-    kwdefaults = {'stat_length': None,
-                  'constant_values': 0,
-                  'end_values': 0,
-                  'reflect_type': 'even',
-                  }
+    kwdefaults = {
+            'stat_length': None,
+            'constant_values': 0,
+            'end_values': 0,
+            'reflect_type': 'even',
+            }
 
     if isinstance(mode, str):
         function = modefunc[mode]
